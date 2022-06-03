@@ -1,0 +1,49 @@
+{
+    "configurations": [
+        {
+            "browse": {
+                "databaseFilename": "${workspaceFolder}/.vscode/browse.vc.db",
+                "limitSymbolsToIncludedHeaders": false
+            },
+            "includePath": [
+                "/home/amsl/catkin_ws/devel/include/**",
+                "/opt/ros/noetic/include/**",
+                "/home/amsl/catkin_ws/src/amsl_navigation/amsl_navigation/amsl_navigation_managers/amsl_navigation_managers/include/**",
+                "/home/amsl/catkin_ws/src/brushee_description/include/**",
+                "/home/amsl/catkin_ws/src/brushee_navigator/include/**",
+                "/home/amsl/catkin_ws/src/amsl_navigation/amsl_navigation/complement/include/**",
+                "/home/amsl/catkin_ws/src/amsl_navigation/amsl_navigation/dwa_planner/include/**",
+                "/home/amsl/catkin_ws/src/amsl_navigation/amsl_navigation/dynamic_cloud_detector/include/**",
+                "/home/amsl/catkin_ws/src/end_to_end_localizer/include/**",
+                "/home/amsl/catkin_ws/src/frontier_explore/include/**",
+                "/home/amsl/catkin_ws/src/laser_scan_noise_remover/include/**",
+                "/home/amsl/catkin_ws/src/LeGO-LOAM/LeGO-LOAM/include/**",
+                "/home/amsl/catkin_ws/src/LIO-SAM/include/**",
+                "/home/amsl/catkin_ws/src/amsl_navigation/amsl_navigation/localmap_creator/include/**",
+                "/home/amsl/catkin_ws/src/amsl_navigation/amsl_navigation/node_edge_localizer/include/**",
+                "/home/amsl/catkin_ws/src/amsl_navigation/amsl_navigation/node_edge_navigator/include/**",
+                "/home/amsl/catkin_ws/src/amsl_navigation/amsl_navigation/perfect_velodyne/include/**",
+                "/home/amsl/catkin_ws/src/amsl_navigation/amsl_navigation/point_cloud_storer/include/**",
+                "/home/amsl/catkin_ws/src/relative_navigator/include/**",
+                "/home/amsl/catkin_ws/src/amsl_navigation/amsl_navigation/road_recognizer/include/**",
+                "/home/amsl/catkin_ws/src/sq2/sq2_teleop/include/**",
+                "/home/amsl/catkin_ws/src/sq2/sq_lidar/include/**",
+                "/home/amsl/catkin_ws/src/amsl_navigation/amsl_navigation/state_lattice_planner/include/**",
+                "/home/amsl/catkin_ws/src/theta_s_ros/include/**",
+                "/home/amsl/catkin_ws/src/amsl_navigation/amsl_navigation/velodyne/velodyne_driver/include/**",
+                "/home/amsl/catkin_ws/src/amsl_navigation/amsl_navigation/velodyne_height_map/include/**",
+                "/home/amsl/catkin_ws/src/amsl_navigation/amsl_navigation/velodyne/velodyne_laserscan/include/**",
+                "/home/amsl/catkin_ws/src/amsl_navigation/amsl_navigation/velodyne/velodyne_pcl/include/**",
+                "/home/amsl/catkin_ws/src/amsl_navigation/amsl_navigation/velodyne/velodyne_pointcloud/include/**",
+                "/usr/include/**",
+                "/home/amsl/catkin_ws/src/simple_localmap_creator/include/**"
+            ],
+            "name": "ROS",
+            "intelliSenseMode": "gcc-x64",
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "gnu11",
+            "cppStandard": "c++14"
+        }
+    ],
+    "version": 4
+}
