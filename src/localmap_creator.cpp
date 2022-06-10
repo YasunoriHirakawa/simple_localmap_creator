@@ -49,7 +49,7 @@ void LocalmapCreator::update_scan_data_(void)
 Obstacle LocalmapCreator::calc_obstacle_coordinate_(int i, double angle)
 {
     if (isinf(laser_scan_.ranges[i])) {
-        laser_scan_.ranges[i] = std::max(map_height_, map_width_) + 1.0;
+        laser_scan_.ranges[i] = (i == 0) ? laser_scan_.ranges[i + 1] : laser_scan_.ranges[i - 1];
     }
 
     double x = laser_scan_.ranges[i] * std::cos(angle);
@@ -88,7 +88,7 @@ void LocalmapCreator::raycast_(Pixel obstacle_px)
     for (int r = 0; r <= obstacle_px.range; r++) {
         int px = r * std::cos(obstacle_px.theta) + grid_center_x_;
         int py = r * std::sin(obstacle_px.theta) + grid_center_y_;
-        if (!is_valid_index_(px, py)){
+        if (!is_valid_index_(px, py)) {
             continue;
         }
 

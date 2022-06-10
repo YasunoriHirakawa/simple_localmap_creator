@@ -1,6 +1,3 @@
-// localmap_creater.h ---HEADER of local map creater---
-// 2020.3.31 Kawai Hibiki , Hirakawa Yasunori
-
 #ifndef __LOCALMAP_CREATOR_H__
 #define __LOCALMAP_CREATOR_H__
 
