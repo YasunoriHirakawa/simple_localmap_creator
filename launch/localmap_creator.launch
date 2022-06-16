@@ -2,11 +2,14 @@
     <node pkg="simple_localmap_creator" type="localmap_creator_node" name="localmap_creator_node" output="screen">
         <rosparam>
             hz: 10
+            laser_names:
+                - velodyne
             map_width: 20
             map_height: 20
             map_resolution: 0.1
         </rosparam>
-        <remap from="/scan" to="/scan"/>
+        <remap from="/velodyne/scan" to="/scan"/>
         <remap from="/localmap" to="/localmap"/>
     </node>
+    <node pkg="tf2_ros" type="static_transform_publisher" name="static_transform_publisher" output="screen" args="0 0 0 0 0 0 base_link velodyne"/>
 </launch>

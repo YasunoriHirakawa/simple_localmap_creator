@@ -12,6 +12,8 @@ find_package(catkin REQUIRED COMPONENTS
   nav_msgs
   roscpp
   sensor_msgs
+  tf2
+  tf2_ros
 )
 
 ## System dependencies are found with CMake's conventions
@@ -134,7 +136,12 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(localmap_creator_node src/localmap_creator_node.cpp src/localmap_creator.cpp)
+add_executable(
+  localmap_creator_node
+  src/laser_msg_handler.cpp
+  src/localmap_creator.cpp
+  src/localmap_creator_node.cpp
+)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the

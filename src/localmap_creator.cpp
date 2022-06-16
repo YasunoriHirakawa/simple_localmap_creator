@@ -1,69 +1,86 @@
-#include "simple_localmap_creator/localmap_creator.h"
-#include "sensor_msgs/LaserScan.h"
-#include <algorithm>
-#include <cmath>
+#include <simple_localmap_creator/localmap_creator.h>
 
 namespace simple_localmap_creator {
-LocalmapCreator::LocalmapCreator()
-    : nh_private_("~")
+LocalmapCreator::LocalmapCreator(const Param param)
+    : param_(param)
 {
-    nh_private_.param("hz", hz_, { 10 });
-    nh_private_.param("map_resolution", map_resolution_, { 0.05 });
-    nh_private_.param("map_width", map_width_, { 10.0 });
-    nh_private_.param("map_height", map_height_, { 10.0 });
-
-    sub_laser_ = nh_.subscribe(
-        "/scan", 1, &LocalmapCreator::laser_callback_, this, ros::TransportHints().reliable().tcpNoDelay());
+    for (const auto laser_name : param_.laser_names) {
+        laser_msg_handlers_.emplace_back(new LaserMsgHandler(laser_name, nh_));
+    }
     pub_localmap_ = nh_.advertise<nav_msgs::OccupancyGrid>("/localmap", 1);
 
     gridmap_.header.frame_id = "base_link";
-    gridmap_.info.resolution = map_resolution_;
-    gridmap_.info.width = (int)(map_width_ / map_resolution_);
-    gridmap_.info.height = (int)(map_height_ / map_resolution_);
-    gridmap_.info.origin.position.x = -(double)(map_width_ / 2.0);
-    gridmap_.info.origin.position.y = -(double)(map_height_ / 2.0);
+    gridmap_.info.resolution = param_.map_resolution;
+    gridmap_.info.width = static_cast<int>(param.map_width / param.map_resolution);
+    gridmap_.info.height = static_cast<int>(param.map_height / param.map_resolution);
+    gridmap_.info.origin.position.x = static_cast<double>(-param.map_width / 2.0);
+    gridmap_.info.origin.position.y = static_cast<double>(-param.map_height / 2.0);
     gridmap_.info.origin.orientation.x = 0.0;
     gridmap_.info.origin.orientation.y = 0.0;
     gridmap_.info.origin.orientation.z = 0.0;
     gridmap_.info.origin.orientation.w = 1.0;
     map_size_ = gridmap_.info.height * gridmap_.info.width;
-    grid_center_x_ = (double)(gridmap_.info.width / 2.0);
-    grid_center_y_ = (double)(gridmap_.info.height / 2.0);
+    grid_center_x_ = static_cast<double>(gridmap_.info.width / 2.0);
+    grid_center_y_ = static_cast<double>(gridmap_.info.height / 2.0);
 }
 
-void LocalmapCreator::laser_callback_(const sensor_msgs::LaserScan::ConstPtr& msg)
+bool LocalmapCreator::has_all_laser_scans(void)
 {
-    if (msg->ranges.empty()) {
-        ROS_WARN_STREAM("Scan data is empty.");
-        return;
+    for (auto& laser_msg_handler : laser_msg_handlers_) {
+        if (!laser_msg_handler->has_laser_scan()) {
+            return false;
+        }
+    }
+    return true;
+}
+
+Obstacle LocalmapCreator::calc_obstacle_coordinate(const int i, std::vector<Polar>& scan_data)
+{
+    if (isinf(scan_data[i].range)) {
+        scan_data[i].range = (i == 0) ? scan_data[i + 1].range : scan_data[i - 1].range;
     }
 
-    laser_scan_msg_ = *msg;
+    const double x = scan_data[i].range * std::cos(scan_data[i].angle);
+    const double y = scan_data[i].range * std::sin(scan_data[i].angle);
+
+    return { x, y, scan_data[i].angle };
 }
 
-void LocalmapCreator::update_scan_data_(void)
+Obstacle LocalmapCreator::transform_obstacle_coordiname(
+    const Obstacle obstacle, LaserMsgHandler& laser_msg_handler)
 {
-    laser_scan_ = laser_scan_msg_;
+    geometry_msgs::TransformStamped laser_tf = laser_msg_handler.get_laser_tf();
+    geometry_msgs::PoseStamped obstacle_pose;
+    obstacle_pose.header.stamp = laser_tf.header.stamp;
+    obstacle_pose.header.frame_id = laser_tf.header.frame_id;
+    obstacle_pose.pose.position.x = obstacle.x;
+    obstacle_pose.pose.position.y = obstacle.y;
+    obstacle_pose.pose.orientation = [=] {
+        tf2::Quaternion quat;
+        geometry_msgs::Quaternion quat_msg;
+        quat.setRPY(0.0, 0.0, obstacle.theta);
+        tf2::convert(quat, quat_msg);
+        return quat_msg;
+    }();
+    geometry_msgs::PoseStamped obstacle_pose_transformed;
+    obstacle_pose_transformed.header.stamp = laser_tf.header.stamp;
+    obstacle_pose_transformed.header.frame_id = laser_tf.child_frame_id;
+
+    tf2::doTransform(obstacle_pose, obstacle_pose_transformed, laser_tf);
+
+    return {
+        obstacle_pose_transformed.pose.position.x,
+        obstacle_pose_transformed.pose.position.y,
+        tf2::getYaw(obstacle_pose_transformed.pose.orientation)
+    };
 }
 
-Obstacle LocalmapCreator::calc_obstacle_coordinate_(int i, double angle)
-{
-    if (isinf(laser_scan_.ranges[i])) {
-        laser_scan_.ranges[i] = (i == 0) ? laser_scan_.ranges[i + 1] : laser_scan_.ranges[i - 1];
-    }
-
-    double x = laser_scan_.ranges[i] * std::cos(angle);
-    double y = laser_scan_.ranges[i] * std::sin(angle);
-
-    return { x, y, angle };
-}
-
-Pixel LocalmapCreator::calc_pixels_in_gridmap_(const Obstacle& obstacle)
+Pixel LocalmapCreator::calc_pixels_in_gridmap(const Obstacle obstacle)
 {
     int px_x = obstacle.x / gridmap_.info.resolution;
     int px_y = obstacle.y / gridmap_.info.resolution;
-    int px_r = std::hypot(px_x, px_y);
-    double px_t = obstacle.theta;
+    const int px_r = std::hypot(px_x, px_y);
+    const double px_t = obstacle.theta;
 
     px_x += grid_center_x_;
     px_y += grid_center_y_;
@@ -71,10 +88,10 @@ Pixel LocalmapCreator::calc_pixels_in_gridmap_(const Obstacle& obstacle)
     return { px_x, px_y, px_r, px_t };
 }
 
-bool LocalmapCreator::is_valid_index_(int px_x, int px_y)
+bool LocalmapCreator::is_valid_index(const int px_x, const int px_y)
 {
-    bool is_too_large = px_x >= (int)gridmap_.info.width || px_y >= (int)gridmap_.info.height;
-    bool is_negative = px_x < 0 || px_y < 0;
+    const bool is_too_large = px_x >= (int)gridmap_.info.width || px_y >= (int)gridmap_.info.height;
+    const bool is_negative = px_x < 0 || px_y < 0;
 
     if (is_too_large || is_negative) {
         return false;
@@ -83,16 +100,19 @@ bool LocalmapCreator::is_valid_index_(int px_x, int px_y)
     return true;
 }
 
-void LocalmapCreator::raycast_(Pixel obstacle_px)
+void LocalmapCreator::raycast(const Pixel obstacle_px)
 {
     for (int r = 0; r <= obstacle_px.range; r++) {
         int px = r * std::cos(obstacle_px.theta) + grid_center_x_;
         int py = r * std::sin(obstacle_px.theta) + grid_center_y_;
-        if (!is_valid_index_(px, py)) {
+        if (!is_valid_index(px, py)) {
             continue;
         }
 
         int index = py * gridmap_.info.width + px;
+        if (gridmap_.data[index] == 100) {
+            return;
+        }
         if (r < obstacle_px.range) {
             gridmap_.data[index] = 0;
         } else {
@@ -101,38 +121,37 @@ void LocalmapCreator::raycast_(Pixel obstacle_px)
     }
 }
 
-void LocalmapCreator::update_map()
+void LocalmapCreator::update_map(void)
 {
     gridmap_.data.clear();
     gridmap_.data.assign(gridmap_.info.height * gridmap_.info.width, -1);
 
-    const double angle_step = laser_scan_.angle_increment;
-    const double start_angle = laser_scan_.angle_min;
+    for (auto& laser_msg_handler : laser_msg_handlers_) {
+        std::vector<Polar> scan_data = laser_msg_handler->get_scan_data();
 
-    for (int i = 0; i < (int)laser_scan_.ranges.size(); i++) {
-        double angle = start_angle + angle_step * i;
-        angle = std::atan2(std::sin(angle), std::cos(angle));
-
-        Obstacle obstacle = calc_obstacle_coordinate_(i, angle);
-        Pixel obstacle_px = calc_pixels_in_gridmap_(obstacle);
-        raycast_(obstacle_px);
+        for (int i = 0; i < static_cast<int>(scan_data.size()); i++) {
+            Obstacle obstacle = calc_obstacle_coordinate(i, scan_data);
+            obstacle = transform_obstacle_coordiname(obstacle, *laser_msg_handler);
+            Pixel obstacle_px = calc_pixels_in_gridmap(obstacle);
+            raycast(obstacle_px);
+        }
     }
-
-    gridmap_.header.stamp = ros::Time::now();
 }
 
 void LocalmapCreator::process(void)
 {
-    ros::Rate loop_rate(hz_);
+    ros::Rate loop_rate(param_.hz);
 
     while (ros::ok()) {
-        update_scan_data_();
-        if (!laser_scan_.ranges.empty()) {
-            update_map();
-            pub_localmap_.publish(gridmap_);
-        }
         ros::spinOnce();
         loop_rate.sleep();
+
+        if (!has_all_laser_scans()) {
+            continue;
+        }
+        update_map();
+        gridmap_.header.stamp = ros::Time::now();
+        pub_localmap_.publish(gridmap_);
     }
 }
 } // namespace simple_localmap_creator
