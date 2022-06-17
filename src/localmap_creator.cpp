@@ -1,10 +1,11 @@
+#include <memory>
 #include <simple_localmap_creator/localmap_creator.h>
 
 namespace simple_localmap_creator {
 LocalmapCreator::LocalmapCreator(const Param param)
     : param_(param)
 {
-    for (const auto laser_name : param_.laser_names) {
+    for (const auto &laser_name : param_.laser_names) {
         laser_msg_handlers_.emplace_back(new LaserMsgHandler(laser_name, nh_));
     }
     pub_localmap_ = nh_.advertise<nav_msgs::OccupancyGrid>("/localmap", 1);
@@ -47,9 +48,9 @@ Obstacle LocalmapCreator::calc_obstacle_coordinate(const int i, std::vector<Pola
 }
 
 Obstacle LocalmapCreator::transform_obstacle_coordiname(
-    const Obstacle obstacle, LaserMsgHandler& laser_msg_handler)
+    const Obstacle obstacle, std::unique_ptr<LaserMsgHandler>& laser_msg_handler)
 {
-    geometry_msgs::TransformStamped laser_tf = laser_msg_handler.get_laser_tf();
+    geometry_msgs::TransformStamped laser_tf = laser_msg_handler->get_laser_tf();
     geometry_msgs::PoseStamped obstacle_pose;
     obstacle_pose.header.stamp = laser_tf.header.stamp;
     obstacle_pose.header.frame_id = laser_tf.header.frame_id;
@@ -131,7 +132,7 @@ void LocalmapCreator::update_map(void)
 
         for (int i = 0; i < static_cast<int>(scan_data.size()); i++) {
             Obstacle obstacle = calc_obstacle_coordinate(i, scan_data);
-            obstacle = transform_obstacle_coordiname(obstacle, *laser_msg_handler);
+            obstacle = transform_obstacle_coordiname(obstacle, laser_msg_handler);
             Pixel obstacle_px = calc_pixels_in_gridmap(obstacle);
             raycast(obstacle_px);
         }

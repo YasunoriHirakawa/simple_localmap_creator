@@ -2,6 +2,7 @@
 #define __LOCALMAP_CREATOR_H__
 
 #include <cmath>
+#include <memory>
 #include <nav_msgs/OccupancyGrid.h>
 #include <ros/ros.h>
 #include <sensor_msgs/LaserScan.h>
@@ -63,7 +64,7 @@ public:
     bool has_all_laser_scans(void);
     Obstacle calc_obstacle_coordinate(const int i, std::vector<Polar>& scan_data);
     Obstacle transform_obstacle_coordiname(
-        const Obstacle obstacle, LaserMsgHandler& laser_msg_handler);
+        const Obstacle obstacle, std::unique_ptr<LaserMsgHandler>& laser_msg_handler);
     Pixel calc_pixels_in_gridmap(const Obstacle obstacle);
     bool is_valid_index(const int px_x, const int px_y);
     void raycast(const Pixel obstacle_px);
