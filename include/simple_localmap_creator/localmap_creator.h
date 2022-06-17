@@ -62,7 +62,7 @@ class LocalmapCreator {
 public:
     LocalmapCreator(const Param param);
     bool has_all_laser_scans(void);
-    Obstacle calc_obstacle_coordinate(const int i, std::vector<Polar>& scan_data);
+    Obstacle calc_obstacle_coordinate(const Polar single_scan);
     Obstacle transform_obstacle_coordiname(
         const Obstacle obstacle, std::unique_ptr<LaserMsgHandler>& laser_msg_handler);
     Pixel calc_pixels_in_gridmap(const Obstacle obstacle);

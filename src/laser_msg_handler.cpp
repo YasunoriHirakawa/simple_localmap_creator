@@ -40,9 +40,17 @@ std::vector<Polar> LaserMsgHandler::get_scan_data(void)
     std::vector<Polar> scan_data;
 
     for (int i = 0; i < static_cast<int>(laser_scan_.ranges.size()); i++) {
+        float& range = laser_scan_.ranges[i];
+
+        bool is_invalid_scan = (isinf(range) || isnan(range)
+            || range < laser_scan_.range_min || range > laser_scan_.range_max);
+        if (is_invalid_scan) {
+            range = (i == 0) ? laser_scan_.ranges[i + 1] : laser_scan_.ranges[i - 1];
+        }
+
         double angle = angle_min_ + angle_step_ * i;
         angle = std::atan2(std::sin(angle), std::cos(angle));
-        scan_data.push_back({ angle, laser_scan_.ranges[i] });
+        scan_data.push_back({ angle, range });
     }
 
     return scan_data;

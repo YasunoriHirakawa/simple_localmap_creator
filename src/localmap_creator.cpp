@@ -35,16 +35,12 @@ bool LocalmapCreator::has_all_laser_scans(void)
     return true;
 }
 
-Obstacle LocalmapCreator::calc_obstacle_coordinate(const int i, std::vector<Polar>& scan_data)
+Obstacle LocalmapCreator::calc_obstacle_coordinate(const Polar single_scan)
 {
-    if (isinf(scan_data[i].range)) {
-        scan_data[i].range = (i == 0) ? scan_data[i + 1].range : scan_data[i - 1].range;
-    }
+    const double x = single_scan.range * std::cos(single_scan.angle);
+    const double y = single_scan.range * std::sin(single_scan.angle);
 
-    const double x = scan_data[i].range * std::cos(scan_data[i].angle);
-    const double y = scan_data[i].range * std::sin(scan_data[i].angle);
-
-    return { x, y, scan_data[i].angle };
+    return { x, y, single_scan.angle };
 }
 
 Obstacle LocalmapCreator::transform_obstacle_coordiname(
@@ -135,9 +131,8 @@ void LocalmapCreator::update_map(void)
 
     for (auto& laser_msg_handler : laser_msg_handlers_) {
         std::vector<Polar> scan_data = laser_msg_handler->get_scan_data();
-
-        for (int i = 0; i < static_cast<int>(scan_data.size()); i++) {
-            Obstacle obstacle = calc_obstacle_coordinate(i, scan_data);
+        for (const auto& single_scan : scan_data) {
+            Obstacle obstacle = calc_obstacle_coordinate(single_scan);
             obstacle = transform_obstacle_coordiname(obstacle, laser_msg_handler);
             Pixel obstacle_px = calc_pixels_in_gridmap(obstacle);
             raycast(obstacle_px);
