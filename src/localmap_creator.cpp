@@ -5,7 +5,7 @@ namespace simple_localmap_creator {
 LocalmapCreator::LocalmapCreator(const Param param)
     : param_(param)
 {
-    for (const auto &laser_name : param_.laser_names) {
+    for (const auto& laser_name : param_.laser_names) {
         laser_msg_handlers_.emplace_back(new LaserMsgHandler(laser_name, nh_));
     }
     pub_localmap_ = nh_.advertise<nav_msgs::OccupancyGrid>("/localmap", 1);
@@ -103,7 +103,10 @@ bool LocalmapCreator::is_valid_index(const int px_x, const int px_y)
 
 void LocalmapCreator::raycast(const Pixel obstacle_px)
 {
-    for (int r = 0; r <= obstacle_px.range; r++) {
+    const int max_range = std::max(gridmap_.info.width, gridmap_.info.height);
+    bool has_plotted_obstacle = false;
+
+    for (int r = 0; r <= max_range; r++) {
         int px = r * std::cos(obstacle_px.theta) + grid_center_x_;
         int py = r * std::sin(obstacle_px.theta) + grid_center_y_;
         if (!is_valid_index(px, py)) {
@@ -116,8 +119,11 @@ void LocalmapCreator::raycast(const Pixel obstacle_px)
         }
         if (r < obstacle_px.range) {
             gridmap_.data[index] = 0;
-        } else {
+        } else if (r >= obstacle_px.range && !has_plotted_obstacle) {
             gridmap_.data[index] = 100;
+            has_plotted_obstacle = true;
+        } else {
+            gridmap_.data[index] = -1;
         }
     }
 }
