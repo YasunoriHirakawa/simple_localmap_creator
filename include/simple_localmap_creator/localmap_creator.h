@@ -27,7 +27,6 @@ struct Polar {
 struct Obstacle {
     double x;
     double y;
-    double theta;
 };
 
 struct Pixel {
@@ -54,8 +53,6 @@ private:
     sensor_msgs::LaserScan laser_scan_;
 
     bool has_laser_scan_;
-    double angle_step_;
-    double angle_min_;
 };
 
 class LocalmapCreator {
@@ -67,8 +64,9 @@ public:
         const Obstacle obstacle, std::unique_ptr<LaserMsgHandler>& laser_msg_handler);
     Pixel calc_pixels_in_gridmap(const Obstacle obstacle);
     bool is_valid_index(const int px_x, const int px_y);
-    void raycast(const Pixel obstacle_px);
-    void update_map(void);
+    void plot_obstacles(const Pixel obstacle_px);
+    void raycast(void);
+    void update_observation(void);
     void process(void);
 
 private:
@@ -78,11 +76,11 @@ private:
     ros::Publisher pub_localmap_;
     std::vector<std::unique_ptr<LaserMsgHandler>> laser_msg_handlers_;
 
-    int map_size_;
     double grid_center_x_;
     double grid_center_y_;
 
     nav_msgs::OccupancyGrid gridmap_;
+    std::vector<double> obstacle_directions_;
 };
 } // namespace simple_localmap_creator
 

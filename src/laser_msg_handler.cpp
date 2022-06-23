@@ -5,8 +5,6 @@ LaserMsgHandler::LaserMsgHandler(const std::string laser_name, ros::NodeHandle& 
     : laser_name_(laser_name)
     , tf_listener_(tf_buffer_)
     , has_laser_scan_(false)
-    , angle_step_(0.0)
-    , angle_min_(0.0)
 {
     const std::string laser_topic = "/" + laser_name_ + "/scan";
 
@@ -17,16 +15,12 @@ LaserMsgHandler::LaserMsgHandler(const std::string laser_name, ros::NodeHandle& 
 
 void LaserMsgHandler::laser_scan_callback_(const sensor_msgs::LaserScan::ConstPtr& msg)
 {
-    if (!has_laser_scan_) {
-        has_laser_scan_ = true;
-        angle_step_ = msg->angle_increment;
-        angle_min_ = msg->angle_min;
-    }
     if (msg->ranges.empty()) {
         ROS_WARN_STREAM("Scan data is empty.");
         return;
     }
 
+    has_laser_scan_ = true;
     laser_scan_ = *msg;
 }
 
@@ -38,17 +32,25 @@ bool LaserMsgHandler::has_laser_scan(void)
 std::vector<Polar> LaserMsgHandler::get_scan_data(void)
 {
     std::vector<Polar> scan_data;
+    int n_steps = static_cast<int>(laser_scan_.ranges.size());
 
-    for (int i = 0; i < static_cast<int>(laser_scan_.ranges.size()); i++) {
+    for (int i = 0; i < n_steps; i++) {
         float& range = laser_scan_.ranges[i];
+        int index_inc = i;
+        int index_dec = i;
 
-        bool is_invalid_scan = (isinf(range) || isnan(range)
-            || range < laser_scan_.range_min || range > laser_scan_.range_max);
-        if (is_invalid_scan) {
-            range = (i == 0) ? laser_scan_.ranges[i + 1] : laser_scan_.ranges[i - 1];
+        while (isinf(range) || isnan(range)) {
+            ++index_inc;
+            --index_dec;
+            float range_a = (index_inc < n_steps) ? laser_scan_.ranges[index_inc] : laser_scan_.ranges[index_dec];
+            float range_b = (index_dec >= 0) ? laser_scan_.ranges[index_dec] : laser_scan_.ranges[index_inc];
+            range = (range_a + range_b) * 0.5;
+        }
+        if (range < laser_scan_.range_min || range > laser_scan_.range_max) {
+            range = laser_scan_.range_max;
         }
 
-        double angle = angle_min_ + angle_step_ * i;
+        double angle = laser_scan_.angle_min + laser_scan_.angle_increment * i;
         angle = std::atan2(std::sin(angle), std::cos(angle));
         scan_data.push_back({ angle, range });
     }
