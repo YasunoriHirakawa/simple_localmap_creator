@@ -1,4 +1,3 @@
-#include <memory>
 #include <simple_localmap_creator/localmap_creator.h>
 
 namespace simple_localmap_creator {
