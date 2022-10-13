@@ -38,5 +38,9 @@
     <!-- tf -->
 <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="static_transform_publisher_velodyne" output="screen" args="0 0 0 0 0 0 base_link velodyne"/> -->
 <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="static_transform_publisher_hokuyo" output="screen" args="0 0 0 0 0 0 base_link front_hokuyo"/> -->
+<!-- rviz -->
+<node pkg="rviz" type="rviz" name="rviz" args="-d $(find simple_localmap_creator)/config/merge_test.rviz"/>
+    <!-- for debug -->
+    <include file="$(find velodyne_pointcloud)/launch/VLP-32C_points.launch"/>
 
 </launch>

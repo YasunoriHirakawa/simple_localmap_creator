@@ -66,7 +66,7 @@ public:
     bool is_valid_index(const int px_x, const int px_y);
     void plot_obstacles(const Pixel obstacle_px);
     void raycast(void);
-    void update_observation(void);
+    void update_map(void);
     void process(void);
 
 private:

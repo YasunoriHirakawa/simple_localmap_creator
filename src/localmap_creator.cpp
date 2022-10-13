@@ -1,3 +1,4 @@
+#include <memory>
 #include <simple_localmap_creator/localmap_creator.h>
 
 namespace simple_localmap_creator {
@@ -96,7 +97,7 @@ void LocalmapCreator::plot_obstacles(const Pixel obstacle_px)
     obstacle_directions_.push_back(obstacle_px.theta);
 }
 
-void LocalmapCreator::update_observation(void)
+void LocalmapCreator::update_map(void)
 {
     for (auto& laser_msg_handler : laser_msg_handlers_) {
         std::vector<Polar> scan_data = laser_msg_handler->get_scan_data();
@@ -152,7 +153,7 @@ void LocalmapCreator::process(void)
         gridmap_.data.clear();
         gridmap_.data.assign(gridmap_.info.height * gridmap_.info.width, -1);
         obstacle_directions_.clear();
-        update_observation();
+        update_map();
         raycast();
 
         gridmap_.header.stamp = ros::Time::now();
