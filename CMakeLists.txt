@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.0.2)
 project(simple_localmap_creator)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-add_compile_options(-std=c++11 -o2 -Wall)
+add_compile_options(-std=c++11 -o2 -Wall -g -O0)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -14,6 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   tf2
   tf2_ros
+  message_filters
 )
 
 ## System dependencies are found with CMake's conventions
@@ -142,6 +143,15 @@ add_executable(
   src/localmap_creator.cpp
   src/localmap_creator_node.cpp
 )
+add_executable(
+  front_lidar_map
+  src/front_lidar_map.cpp
+)
+
+add_executable(
+  merged_map_creator
+  src/merged_map_creator.cpp
+)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -152,12 +162,15 @@ add_executable(
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(front_lidar_map ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(merged_map_creator ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(localmap_creator_node
   ${catkin_LIBRARIES}
 )
-
+target_link_libraries(front_lidar_map ${catkin_LIBRARIES})
+target_link_libraries(merged_map_creator ${catkin_LIBRARIES})
 #############
 ## Install ##
 #############
