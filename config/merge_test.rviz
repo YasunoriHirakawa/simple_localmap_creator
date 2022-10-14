@@ -6,9 +6,6 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
-        - /LaserScan1
-        - /LaserScan2
-        - /Map2
       Splitter Ratio: 0.5
     Tree Height: 539
   - Class: rviz/Selection
@@ -28,7 +25,7 @@ Panels:
   - Class: rviz/Time
     Name: Time
     SyncMode: 0
-    SyncSource: LaserScan
+    SyncSource: HokuyoScan
 Preferences:
   PromptSaveOnExit: true
 Toolbars:
@@ -58,12 +55,12 @@ Visualization Manager:
       Class: rviz/Map
       Color Scheme: map
       Draw Behind: false
-      Enabled: true
-      Name: Map
+      Enabled: false
+      Name: HokuyoMap
       Topic: /front_lidar_map
       Unreliable: false
       Use Timestamp: false
-      Value: true
+      Value: false
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
@@ -80,7 +77,7 @@ Visualization Manager:
       Invert Rainbow: false
       Max Color: 255; 255; 255
       Min Color: 0; 0; 0
-      Name: LaserScan
+      Name: HokuyoScan
       Position Transformer: XYZ
       Queue Size: 10
       Selectable: true
@@ -108,7 +105,7 @@ Visualization Manager:
       Invert Rainbow: false
       Max Color: 255; 255; 255
       Min Color: 0; 0; 0
-      Name: LaserScan
+      Name: VelodyneScan
       Position Transformer: XYZ
       Queue Size: 10
       Selectable: true
@@ -125,7 +122,7 @@ Visualization Manager:
       Color Scheme: map
       Draw Behind: false
       Enabled: false
-      Name: Map
+      Name: VelodyneMap
       Topic: /velodyne_map
       Unreliable: false
       Use Timestamp: false
@@ -134,12 +131,12 @@ Visualization Manager:
       Class: rviz/Map
       Color Scheme: map
       Draw Behind: false
-      Enabled: false
-      Name: Map
+      Enabled: true
+      Name: MergedMap
       Topic: /merged_local_map
       Unreliable: false
       Use Timestamp: false
-      Value: false
+      Value: true
     - Class: rviz/Image
       Enabled: true
       Image Topic: /grasscam/image_raw
