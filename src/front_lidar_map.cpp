@@ -144,7 +144,9 @@ void FrontLidarMap::expand_map(nav_msgs::OccupancyGrid map, double rate)
                 for(int k=-expansion; k<=expansion; k++)
                 {
                     int index = (y+j)*map_width + (x+k);
-                    if(index >= 0 && index < map_size)
+                    int index_x = index % map_width;
+                    int index_y = index / map_width;
+                    if(index >= 0 && index < map_size && index_x >= x-expansion && index_x <= x+expansion && index_y >= y-expansion && index_y <= y+expansion)
                     {
                         exmap.data[index] = 100;
                     }

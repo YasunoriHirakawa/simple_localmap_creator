@@ -18,9 +18,9 @@ void sync_callback(const nav_msgs::OccupancyGrid::ConstPtr& map1, const nav_msgs
     for(int i=0; i<data_size; i++)
     {
         merged_map.data[i] = map1->data[i];
+        // expand map1 obstacle area : expansion_rate_
         if(map2->data[i] == 100) merged_map.data[i] = 100;
-        // expand obstacle area : expansion_rate_
-        if(merged_map.data[i] == 100)
+        if(map1->data[i] == 100)
         {
             int x = i%(int)map_width_;
             int y = i/(int)map_width_;
@@ -30,7 +30,13 @@ void sync_callback(const nav_msgs::OccupancyGrid::ConstPtr& map1, const nav_msgs
                 for(int k=-expansion; k<=expansion; k++)
                 {
                     int index = (y+j)*map_width_ + (x+k);
-                    if(index >= 0 && index < data_size) merged_map.data[index] = 100;
+                    int index_x = index % (int)map_width_;
+                    int index_y = index / (int)map_width_;
+                    if(index >= 0 && index < data_size && index_x >= x-expansion && index_x <= x+expansion && index_y >= y-expansion && index_y <= y+expansion)
+                    {
+                        merged_map.data[index] = 100;
+                    }
+
                 }
             }
         }
