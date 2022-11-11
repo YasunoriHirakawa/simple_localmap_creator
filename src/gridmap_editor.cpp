@@ -1,6 +1,6 @@
 #include<road_projector/gridmap_editor.h>
 
-bool Gridmap::set_map(nav_msgs::OccupancyGrid &map)
+bool Gridmap::set_map(const nav_msgs::OccupancyGrid &map)
 {
     if(map.data.size() == 0) ROS_INFO("Gridmap: Data size is 0. only setting map_info");
     else if(map.data.size() != map.info.width*map.info.height)
