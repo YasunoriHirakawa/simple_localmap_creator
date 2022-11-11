@@ -36,6 +36,13 @@
         <param name="map_topic2" value="/front_lidar_map"/>
         <remap from="/merged_local_map" to="/local_map/expand"/>
     </node>
+    <node pkg="simple_localmap_creator" type="road_projector" name="road_projector" output="screen">
+        <remap from="/localmap" to="/local_map/expand"/>
+        <remap from="/road" to="/road"/>
+        <remap from="/projected_map" to="/localmap/projected_roadedge"/>
+        <param name="visualize" value="true"/>
+        <param name="road_thickness" value="0.3"/>
+    </node>
     <!-- tf -->
 <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="static_transform_publisher_velodyne" output="screen" args="0 0 0 0 0 0 base_link velodyne"/> -->
 <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="static_transform_publisher_hokuyo" output="screen" args="0 0 0 0 0 0 base_link front_hokuyo"/> -->
