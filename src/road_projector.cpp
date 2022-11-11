@@ -11,7 +11,12 @@ RoadProjector::RoadProjector(): nh_(""), tf_listener_(tf_buffer_)
     ros::NodeHandle private_nh("~");
     private_nh.param<bool>("visualize", visualize_, false);
     private_nh.param<float>("road_thickness", road_thickness_, {0.2});
-    if(visualize_) pub_road_points_ = nh_.advertise<geometry_msgs::PoseArray>("/road_points", 1);
+    private_nh.param<float>("ignore_wall_radius", ignore_wall_radius_, {2.0});
+    if(visualize_)
+    {
+        pub_road_points_ = nh_.advertise<geometry_msgs::PoseArray>("/road_points", 1);
+        pub_node_point_ = nh_.advertise<geometry_msgs::PoseStamped>("/node_point", 1);
+    }
 
 }
 
@@ -20,13 +25,17 @@ RoadProjector::~RoadProjector(){}
 void RoadProjector::map_callback(const nav_msgs::OccupancyGrid::ConstPtr& msg)
 {
     if(!have_received_road_) return;
+    if(on_node())
+    {
+        pub_projected_map_.publish(msg);
+        return;
+    }
     if(msg->data.size() == 0)
     {
         ROS_WARN("mapdata is empty");
         return;
     }
-    nav_msgs::OccupancyGrid map = *msg;
-    if(gridmap_->set_map(map))
+    if(gridmap_->set_map(*msg))
     {
         // project road zone to map
         project_road_to_map(road_, gridmap_);
@@ -44,6 +53,26 @@ void RoadProjector::road_callback(const amsl_navigation_msgs::Road::ConstPtr& ms
     road_ = set_road(*msg);
     if (!road_.size()) return;
     have_received_road_ = true;
+}
+
+bool RoadProjector::on_node()
+{
+    float node_x = 0.5*(road_[0][0] + road_[4][0]);
+    float node_y = 0.5*(road_[0][1] + road_[4][1]);
+    if(visualize_)
+    {
+        geometry_msgs::PoseStamped node_point;
+        node_point.header.frame_id = "base_link";
+        node_point.header.stamp = ros::Time::now();
+        node_point.pose.position.x = node_x;
+        node_point.pose.position.y = node_y;
+        node_point.pose.orientation.w = 1.0;
+        pub_node_point_.publish(node_point);
+        ROS_INFO("dist_from_node: %f", std::hypot(node_x, node_y));
+    }
+
+    if(std::hypot(node_x, node_y) < ignore_wall_radius_) return true;
+    else return false;
 }
 
 void RoadProjector::project_road_to_map(const std::vector<std::vector<float>> &road, Gridmap *gridmap)
@@ -122,7 +151,7 @@ std::vector<std::vector<float>> RoadProjector::set_road(const amsl_navigation_ms
         road_points_.poses.clear();
         road_points_.header.frame_id = "base_link";
     }
-    for(int i=0; i<road_points.size(); i++) road_points[i] = transform_road(road_points[i], transform);
+    for(auto& road: road_points) road = transform_road(road, transform);
     if(visualize_) pub_road_points_.publish(road_points_);
     return road_points;
 }

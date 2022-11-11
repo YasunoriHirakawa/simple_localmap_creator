@@ -7,7 +7,7 @@
 class Gridmap
 {
     public:
-        bool set_map(nav_msgs::OccupancyGrid &map);
+        bool set_map(const nav_msgs::OccupancyGrid &map);
         int get_grid(double y, double x);
         int get_grid(int y, int x);
         double get_resolution(){return this->resolution_;}
