@@ -28,6 +28,7 @@ private:
     bool is_in_virtual_wall_zone(const double x, const double y, const std::vector<std::vector<float>> &road);
     bool is_in_polygon(const double x, const double y, const std::vector<std::vector<float>> &polygon);
     bool on_node();
+    bool out_of_road();
 
 
 

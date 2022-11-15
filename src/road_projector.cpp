@@ -25,7 +25,7 @@ RoadProjector::~RoadProjector(){}
 void RoadProjector::map_callback(const nav_msgs::OccupancyGrid::ConstPtr& msg)
 {
     if(!have_received_road_) return;
-    if(on_node())
+    if(on_node() || out_of_road())
     {
         pub_projected_map_.publish(msg);
         return;
@@ -53,6 +53,12 @@ void RoadProjector::road_callback(const amsl_navigation_msgs::Road::ConstPtr& ms
     road_ = set_road(*msg);
     if (!road_.size()) return;
     have_received_road_ = true;
+}
+
+bool RoadProjector::out_of_road()
+{
+    std::vector<std::vector<float>> road_zone = { road_[0], road_[3], road_[7], road_[4] };
+    return !is_in_polygon(0.0, 0.0, road_zone);
 }
 
 bool RoadProjector::on_node()
