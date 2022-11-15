@@ -12,6 +12,8 @@ RoadProjector::RoadProjector(): nh_(""), tf_listener_(tf_buffer_)
     private_nh.param<bool>("visualize", visualize_, false);
     private_nh.param<float>("road_thickness", road_thickness_, {0.2});
     private_nh.param<float>("ignore_wall_radius", ignore_wall_radius_, {2.0});
+    have_received_road_ = false;
+    is_outside_of_road_ = false;
     if(visualize_)
     {
         pub_road_points_ = nh_.advertise<geometry_msgs::PoseArray>("/road_points", 1);
@@ -57,8 +59,18 @@ void RoadProjector::road_callback(const amsl_navigation_msgs::Road::ConstPtr& ms
 
 bool RoadProjector::out_of_road()
 {
-    std::vector<std::vector<float>> road_zone = { road_[0], road_[3], road_[7], road_[4] };
-    return !is_in_polygon(0.0, 0.0, road_zone);
+    if(is_outside_of_road_)
+    {
+        //road_zone is inside of wall
+        std::vector<std::vector<float>> road_zone = { road_[0], road_[3], road_[7], road_[4] };
+        return !is_in_polygon(0.0, 0.0, road_zone);
+    }
+    else
+    {
+        //road_zone is outside of wall
+        std::vector<std::vector<float>> road_zone = { road_[1], road_[2], road_[6], road_[5] };
+        return !is_in_polygon(0.0, 0.0, road_zone);
+    }
 }
 
 bool RoadProjector::on_node()

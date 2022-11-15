@@ -32,7 +32,8 @@ private:
 
 
 
-    bool have_received_road_=false;
+    bool have_received_road_;
+    bool is_outside_of_road_;
     std::vector<std::vector<float>> road_;
     Gridmap* gridmap_;
     geometry_msgs::PoseArray road_points_;
