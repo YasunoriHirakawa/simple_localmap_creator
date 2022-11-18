@@ -36,17 +36,28 @@ std::vector<Polar> LaserMsgHandler::get_scan_data(void)
 
     for (int i = 0; i < n_steps; i++) {
         float& range = laser_scan_.ranges[i];
-        int index_inc = i;
-        int index_dec = i;
 
-        while (isinf(range) || isnan(range)) {
-            ++index_inc;
-            --index_dec;
-            float range_a = (index_inc < n_steps) ? laser_scan_.ranges[index_inc] : laser_scan_.ranges[index_dec];
-            float range_b = (index_dec >= 0) ? laser_scan_.ranges[index_dec] : laser_scan_.ranges[index_inc];
-            range = (range_a + range_b) * 0.5;
+        if (isnan(range)) {
+            for (int j = 1; j < n_steps; j++) {
+                int index_a = (i + j < n_steps) ? i + j : n_steps - 1;
+                int index_b = (i - j >= 0) ? i - j : 0;
+                float range_a = laser_scan_.ranges[index_a];
+                float range_b = laser_scan_.ranges[index_b];
+                if (!isnan(range_a)) {
+                    range = range_a;
+                    break;
+                }
+                if (!isnan(range_b)) {
+                    range = range_b;
+                    break;
+                }
+            }
         }
-        if (range < laser_scan_.range_min || range > laser_scan_.range_max) {
+        if (
+                isinf(range) ||
+                range < laser_scan_.range_min || 
+                range > laser_scan_.range_max
+           ) {
             range = laser_scan_.range_max;
         }
 
